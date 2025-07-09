@@ -68,4 +68,9 @@ public class InMemoryItemStorage implements ItemStorage {
                 )
                 .collect(Collectors.toList());
     }
+
+    private boolean containsText(Item item, String text) {
+        return item.getName().toLowerCase().contains(text.toLowerCase()) ||
+               item.getDescription().toLowerCase().contains(text.toLowerCase());
+    }
 }
