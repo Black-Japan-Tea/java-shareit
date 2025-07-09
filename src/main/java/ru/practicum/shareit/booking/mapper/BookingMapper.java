@@ -5,6 +5,8 @@ import org.mapstruct.Mapping;
 import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.model.Booking;
 
+import java.util.List;
+
 @Mapper(componentModel = "spring")
 public interface BookingMapper {
     @Mapping(target = "itemId", source = "item.id")
@@ -14,4 +16,6 @@ public interface BookingMapper {
     @Mapping(target = "item", ignore = true)
     @Mapping(target = "booker", ignore = true)
     Booking toBooking(BookingDto bookingDto);
+
+    List<BookingDto> toBookingDtoList(List<Booking> bookings);
 }

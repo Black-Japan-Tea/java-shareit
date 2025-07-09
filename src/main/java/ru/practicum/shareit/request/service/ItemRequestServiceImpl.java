@@ -5,12 +5,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.mapper.ItemMapper;
-import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.item.service.ItemService;
 import ru.practicum.shareit.request.dto.ItemRequestDto;
 import ru.practicum.shareit.request.mapper.ItemRequestMapper;
 import ru.practicum.shareit.request.model.ItemRequest;
 import ru.practicum.shareit.request.storage.ItemRequestStorage;
+import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.mapper.UserMapper;
+import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.time.LocalDateTime;
@@ -23,31 +25,30 @@ import java.util.stream.Collectors;
 public class ItemRequestServiceImpl implements ItemRequestService {
     private final ItemRequestStorage itemRequestStorage;
     private final UserService userService;
-    private final ItemStorage itemStorage;
+    private final ItemService itemService;
+    private final ItemRequestMapper itemRequestMapper;
+    private final UserMapper userMapper;
 
     @Override
     public ItemRequestDto createItemRequest(Long userId, ItemRequestDto itemRequestDto) {
-        userService.getUserById(userId);
+        UserDto userDto = userService.getUserById(userId);
+        User requestor = userMapper.toUser(userDto);
 
-        ItemRequest itemRequest = ItemRequestMapper.toEntity(itemRequestDto);
-        itemRequest.setRequestor(userService.getUserById(userId));
+        ItemRequest itemRequest = itemRequestMapper.toEntity(itemRequestDto);
+        itemRequest.setRequestor(requestor);
         itemRequest.setCreated(LocalDateTime.now());
 
         ItemRequest createdRequest = itemRequestStorage.createRequest(itemRequest);
-        return ItemRequestMapper.toDto(createdRequest);
+        return enrichWithItems(itemRequestMapper.toDto(createdRequest));
     }
 
     @Override
     public List<ItemRequestDto> getAllItemRequestsByUser(Long userId) {
         userService.getUserById(userId);
 
-        List<ItemRequest> requests = itemRequestStorage.getAllByRequestor(userId);
-        return requests.stream()
-                .map(request -> {
-                    ItemRequestDto dto = ItemRequestMapper.toDto(request);
-                    dto.setItems(getItemsForRequest(request.getId()));
-                    return dto;
-                })
+        return itemRequestStorage.getAllByRequestor(userId).stream()
+                .map(itemRequestMapper::toDto)
+                .map(this::enrichWithItems)
                 .collect(Collectors.toList());
     }
 
@@ -59,14 +60,9 @@ public class ItemRequestServiceImpl implements ItemRequestService {
             throw new IllegalArgumentException("Неверные параметры пагинации");
         }
 
-        List<ItemRequest> requests = itemRequestStorage.getAll(userId, from, size);
-
-        return requests.stream()
-                .map(request -> {
-                    ItemRequestDto dto = ItemRequestMapper.toDto(request);
-                    dto.setItems(getItemsForRequest(request.getId()));
-                    return dto;
-                })
+        return itemRequestStorage.getAll(userId, from, size).stream()
+                .map(itemRequestMapper::toDto)
+                .map(this::enrichWithItems)
                 .collect(Collectors.toList());
     }
 
@@ -77,14 +73,12 @@ public class ItemRequestServiceImpl implements ItemRequestService {
         ItemRequest request = itemRequestStorage.getById(requestId)
                 .orElseThrow(() -> new NotFoundException("Запрос не найден"));
 
-        ItemRequestDto dto = ItemRequestMapper.toDto(request);
-        dto.setItems(getItemsForRequest(requestId));
-        return dto;
+        return enrichWithItems(itemRequestMapper.toDto(request));
     }
 
-    private List<ItemDto> getItemsForRequest(Long requestId) {
-        return itemStorage.findByRequestId(requestId).stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+    private ItemRequestDto enrichWithItems(ItemRequestDto dto) {
+        List<ItemDto> items = itemService.findItemsByRequestId(dto.getId());
+        dto.setItems(items);
+        return dto;
     }
 }

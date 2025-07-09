@@ -1,5 +1,6 @@
 package ru.practicum.shareit.exception.Error;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -11,10 +12,12 @@ import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.shareit.exception.DuplicateEmailException;
 import ru.practicum.shareit.exception.ItemAccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
+import ru.practicum.shareit.exception.SearchException;
 
 import java.util.Map;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestControllerAdvice
 public class ErrorHandler {
 
@@ -50,6 +53,28 @@ public class ErrorHandler {
     @ExceptionHandler(NotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ErrorResponse handleNotFound(NotFoundException ex) {
+        log.error("Not found error: {}", ex.getMessage());
         return new ErrorResponse(ex.getMessage());
+    }
+
+    @ExceptionHandler(SearchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleSearchException(SearchException ex) {
+        log.error("Search error: {}", ex.getMessage());
+        return new ErrorResponse(ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {
+        log.error("Validation error: {}", ex.getMessage());
+        return new ErrorResponse(ex.getMessage());
+    }
+
+    @ExceptionHandler(Exception.class)
+    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleAllExceptions(Exception ex) {
+        log.error("Internal server error: {}", ex.getMessage(), ex);
+        return new ErrorResponse("Internal server error");
     }
 }

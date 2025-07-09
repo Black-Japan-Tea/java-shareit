@@ -17,4 +17,6 @@ public interface ItemStorage {
     List<Item> searchItems(String text);
 
     List<Item> findByRequestId(Long requestId);
+
+    List<Item> searchAvailableItems(String text);
 }

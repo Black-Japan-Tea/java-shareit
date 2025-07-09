@@ -3,17 +3,11 @@ package ru.practicum.shareit.item.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.mapper.ItemMapper;
-import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -27,43 +21,41 @@ public class ItemController {
     public ItemDto createItem(@RequestHeader(USER_ID_HEADER) Long userId,
                               @Valid @RequestBody ItemDto itemDto) {
         log.info("Creating new item: {}, userId: {}", itemDto, userId);
-        try {
-            return ItemMapper.toItemDto(itemService.createItem(userId, ItemMapper.toItem(itemDto)));
-        } catch (NotFoundException e) {
-            log.error(e.getMessage());
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getMessage());
-        }
+        return itemService.createItem(userId, itemDto);
     }
 
     @PatchMapping("/{itemId}")
     public ItemDto updateItem(@RequestHeader(USER_ID_HEADER) Long userId,
                               @PathVariable Long itemId,
                               @RequestBody ItemDto itemDto) {
-        log.info("Updating item: {}, userId: {}", itemDto, userId);
-        Item itemUpdates = ItemMapper.toItem(itemDto);
-        return ItemMapper.toItemDto(itemService.updateItem(userId, itemId, itemUpdates));
+        log.info("Updating item ID {}: {}, userId: {}", itemId, itemDto, userId);
+        return itemService.updateItem(userId, itemId, itemDto);
     }
 
     @GetMapping("/{itemId}")
     public ItemDto getItemById(@RequestHeader(USER_ID_HEADER) Long userId,
                                @PathVariable Long itemId) {
         log.info("Getting item by ID: {}, userId: {}", itemId, userId);
-        return ItemMapper.toItemDto(itemService.getItemById(userId, itemId));
+        return itemService.getItemById(userId, itemId);
     }
 
     @GetMapping
     public List<ItemDto> getAllItemsByOwner(@RequestHeader(USER_ID_HEADER) Long userId) {
         log.info("Getting all items by owner: {}", userId);
-        return itemService.getAllItemsByOwner(userId).stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+        return itemService.getAllItemsByOwner(userId);
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(@RequestParam String text) {
-        log.info("Searching for items with text {}", text);
-        return itemService.searchItems(text).stream()
-                .map(ItemMapper::toItemDto)
-                .collect(Collectors.toList());
+    public List<ItemDto> searchItems(@RequestParam String text,
+                                     @RequestHeader(USER_ID_HEADER) Long userId) {
+        log.info("Searching items with text: '{}', userId: {}", text, userId);
+        try {
+            List<ItemDto> result = itemService.searchItems(text);
+            log.debug("Found {} items", result.size());
+            return result;
+        } catch (Exception e) {
+            log.error("Search error", e);
+            throw e;
+        }
     }
 }

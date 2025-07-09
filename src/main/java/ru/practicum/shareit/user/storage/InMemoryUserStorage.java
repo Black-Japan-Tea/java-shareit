@@ -42,6 +42,6 @@ public class InMemoryUserStorage implements UserStorage {
     @Override
     public boolean existsByEmail(String email) {
         return users.values().stream()
-                .anyMatch(user -> user.getEmail().equals(email));
+                .anyMatch(u -> u.getEmail().equals(email));
     }
 }

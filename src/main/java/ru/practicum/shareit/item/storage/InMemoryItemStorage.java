@@ -3,10 +3,7 @@ package ru.practicum.shareit.item.storage;
 import org.springframework.stereotype.Repository;
 import ru.practicum.shareit.item.model.Item;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -24,9 +21,13 @@ public class InMemoryItemStorage implements ItemStorage {
 
     @Override
     public Item updateItem(Item item) {
+        if (item.getAvailable() == null) {
+            item.setAvailable(false);
+        }
         items.put(item.getId(), item);
         return item;
     }
+
 
     @Override
     public Optional<Item> getItemById(Long itemId) {
@@ -54,4 +55,22 @@ public class InMemoryItemStorage implements ItemStorage {
                 .filter(item -> item.getRequest() != null && item.getRequest().getId().equals(requestId))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<Item> searchAvailableItems(String text) {
+        Objects.requireNonNull(text, "Search text cannot be null");
+
+        return items.values().stream()
+                .filter(item -> Boolean.TRUE.equals(item.getAvailable()))
+                .filter(item ->
+                        item.getName().toLowerCase().contains(text) ||
+                        item.getDescription().toLowerCase().contains(text)
+                )
+                .collect(Collectors.toList());
+    }
+
+//    private boolean containsText(Item item, String text) {
+//        return item.getName().toLowerCase().contains(text.toLowerCase()) ||
+//               item.getDescription().toLowerCase().contains(text.toLowerCase());
+//    }
 }

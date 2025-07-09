@@ -20,4 +20,5 @@ public class ItemDto {
     @NotNull(message = "Поле available обязательно")
     private Boolean available;
     private Long requestId;
+    private Long ownerId;
 }
