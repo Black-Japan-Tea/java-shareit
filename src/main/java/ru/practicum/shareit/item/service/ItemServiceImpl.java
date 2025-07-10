@@ -1,9 +1,7 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.shareit.exception.ItemAccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
@@ -42,18 +40,24 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
         userService.getUserById(userId);
-
-        Item existingItem = itemStorage.getItemById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item " + itemId + " not found"));
+        Item existingItem = getExistingItem(itemId);
 
         if (!existingItem.getOwner().getId().equals(userId)) {
             throw new ItemAccessDeniedException("User " + userId + " is not the owner of the item " + itemId);
+        }
+        if (itemDto.getName() != null) {
+            existingItem.setName(itemDto.getName());
+        }
+        if (itemDto.getDescription() != null) {
+            existingItem.setDescription(itemDto.getDescription());
+        }
+        if (itemDto.getAvailable() != null) {
+            existingItem.setAvailable(itemDto.getAvailable());
         }
 
         Item updatedItem = itemMapper.toItem(itemDto);
         updatedItem.setId(itemId);
         updatedItem.setOwner(existingItem.getOwner());
-
         Item savedItem = itemStorage.updateItem(updatedItem);
         return itemMapper.toItemDto(savedItem);
     }
@@ -61,45 +65,33 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto getItemById(Long userId, Long itemId) {
         userService.getUserById(userId);
-
-        Item item = itemStorage.getItemById(itemId)
-                .orElseThrow(() -> new NotFoundException("Item " + itemId + " not found"));
-
-        if (!item.getOwner().getId().equals(userId) && !item.getAvailable()) {
-            throw new ItemAccessDeniedException("User " + userId + " doesn't have access to this item");
-        }
-
+        Item item = getExistingItem(itemId);
         return itemMapper.toItemDto(item);
     }
 
     @Override
     public List<ItemDto> getAllItemsByOwner(Long userId) {
         userService.getUserById(userId);
-
         List<Item> items = itemStorage.getAllItemsByOwner(userId);
         return itemMapper.toItemDtoList(items);
     }
 
     @Override
     public List<ItemDto> searchItems(String text) {
-        try {
-            if (text == null || text.isBlank()) {
-                return Collections.emptyList();
-            }
-
-            String searchText = text.trim().toLowerCase();
-            List<Item> items = itemStorage.searchAvailableItems(searchText);
-
-            return items.stream()
-                    .map(itemMapper::toItemDto)
-                    .peek(dto -> dto.setAvailable(true))
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            throw new ResponseStatusException(
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    "Search operation failed",
-                    e
-            );
+        if (text == null || text.isBlank()) {
+            return Collections.emptyList();
         }
+
+        String searchText = text.trim().toLowerCase();
+        List<Item> items = itemStorage.searchAvailableItems(searchText);
+
+        return items.stream()
+                .map(itemMapper::toItemDto)
+                .collect(Collectors.toList());
+    }
+
+    private Item getExistingItem(Long itemId) {
+        return itemStorage.getItemById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item " + itemId + " not found"));
     }
 }

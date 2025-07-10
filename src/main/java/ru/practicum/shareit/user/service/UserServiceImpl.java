@@ -25,9 +25,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto getUserById(Long userId) {
-        User user = userStorage.getUserById(userId)
-                .orElseThrow(() -> new NotFoundException("User " + userId + " not found"));
-        return userMapper.toUserDto(user);
+        return userMapper.toUserDto(getExistingUser(userId));
     }
 
     @Override
@@ -41,15 +39,14 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto updateUser(Long userId, UserDto userDto) {
-        User existingUser = userStorage.getUserById(userId)
-                .orElseThrow(() -> new NotFoundException("User " + userId + " not found"));
+        User existingUser = getExistingUser(userId);
 
-        if (userDto.getEmail() != null && !userDto.getEmail().equals(existingUser.getEmail())) {
+        if (userDto.getEmail() != null && !userDto.getEmail().equals(existingUser.getEmail()) && !userDto.getEmail().isBlank()) {
             validateEmailUniqueness(userDto.getEmail());
             existingUser.setEmail(userDto.getEmail());
         }
 
-        if (userDto.getName() != null) {
+        if (userDto.getName() != null && !userDto.getName().isBlank()) {
             existingUser.setName(userDto.getName());
         }
 
@@ -68,5 +65,10 @@ public class UserServiceImpl implements UserService {
         if (userStorage.existsByEmail(email)) {
             throw new DuplicateEmailException("Email " + email + " already in use");
         }
+    }
+
+    private User getExistingUser(Long userId) {
+        return userStorage.getUserById(userId)
+                .orElseThrow(() -> new NotFoundException("User " + userId + " not found"));
     }
 }

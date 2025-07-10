@@ -14,7 +14,5 @@ public interface ItemStorage {
 
     List<Item> getAllItemsByOwner(Long ownerId);
 
-    List<Item> searchItems(String text);
-
     List<Item> searchAvailableItems(String text);
 }

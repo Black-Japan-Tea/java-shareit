@@ -28,7 +28,6 @@ public class InMemoryItemStorage implements ItemStorage {
         return item;
     }
 
-
     @Override
     public Optional<Item> getItemById(Long itemId) {
         return Optional.ofNullable(items.get(itemId));
@@ -38,14 +37,6 @@ public class InMemoryItemStorage implements ItemStorage {
     public List<Item> getAllItemsByOwner(Long ownerId) {
         return items.values().stream()
                 .filter(item -> item.getOwner().getId().equals(ownerId))
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public List<Item> searchItems(String text) {
-        return items.values().stream()
-                .filter(item -> Boolean.TRUE.equals(item.getAvailable()))
-                .filter(item -> containsText(item, text))
                 .collect(Collectors.toList());
     }
 
