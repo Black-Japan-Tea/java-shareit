@@ -47,9 +47,10 @@ public class InMemoryItemStorage implements ItemStorage {
 
     @Override
     public List<Item> searchAvailableItems(String text) {
+        String lowerText = text.toLowerCase();
         return items.values().stream()
                 .filter(item -> Boolean.TRUE.equals(item.getAvailable()))
-                .filter(item -> containsText(item, text.toLowerCase()))
+                .filter(item -> containsText(item, lowerText))
                 .collect(Collectors.toList());
     }
 }

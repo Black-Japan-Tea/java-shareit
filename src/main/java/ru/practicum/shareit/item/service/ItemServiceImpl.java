@@ -78,16 +78,13 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> searchItems(String text) {
-        if (text == null || text.isBlank()) {
+        if (text == null || text.isBlank() || text.trim().isEmpty()) {
             return Collections.emptyList();
         }
 
         String searchText = text.trim().toLowerCase();
         List<Item> items = itemStorage.searchAvailableItems(searchText);
-
-        return items.stream()
-                .map(itemMapper::toItemDto)
-                .collect(Collectors.toList());
+        return itemMapper.toItemDtoList(items);
     }
 
     private Item getExistingItem(Long itemId) {
