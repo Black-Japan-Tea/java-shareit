@@ -41,7 +41,7 @@ public class ErrorHandler {
 
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<String> handleResponseStatusException(ResponseStatusException ex) {
-        return new ResponseEntity<>(ex.getReason(), ex.getStatusCode());
+        return ResponseEntity.status(ex.getStatusCode()).body(ex.getReason());
     }
 
     @ExceptionHandler(ItemAccessDeniedException.class)
@@ -69,12 +69,5 @@ public class ErrorHandler {
     public ErrorResponse handleIllegalArgument(IllegalArgumentException ex) {
         log.error("Validation error: {}", ex.getMessage());
         return new ErrorResponse(ex.getMessage());
-    }
-
-    @ExceptionHandler(Exception.class)
-    @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleAllExceptions(Exception ex) {
-        log.error("Internal server error: {}", ex.getMessage(), ex);
-        return new ErrorResponse("Internal server error");
     }
 }

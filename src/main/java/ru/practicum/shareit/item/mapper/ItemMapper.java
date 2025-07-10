@@ -10,6 +10,7 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface ItemMapper {
     @Mapping(target = "ownerId", source = "owner.id")
+    @Mapping(target = "available", source = "available")
     ItemDto toItemDto(Item item);
 
     @Mapping(target = "owner", ignore = true)

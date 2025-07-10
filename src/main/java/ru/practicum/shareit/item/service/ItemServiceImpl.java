@@ -1,10 +1,11 @@
 package ru.practicum.shareit.item.service;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.shareit.exception.ItemAccessDeniedException;
 import ru.practicum.shareit.exception.NotFoundException;
-import ru.practicum.shareit.exception.SearchException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemMapper;
 import ru.practicum.shareit.item.model.Item;
@@ -81,14 +82,24 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> searchItems(String text) {
-        if (text == null || text.isBlank()) {
-            return Collections.emptyList();
+        try {
+            if (text == null || text.isBlank()) {
+                return Collections.emptyList();
+            }
+
+            String searchText = text.trim().toLowerCase();
+            List<Item> items = itemStorage.searchAvailableItems(searchText);
+
+            return items.stream()
+                    .map(itemMapper::toItemDto)
+                    .peek(dto -> dto.setAvailable(true))
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new ResponseStatusException(
+                    HttpStatus.INTERNAL_SERVER_ERROR,
+                    "Search operation failed",
+                    e
+            );
         }
-
-        List<Item> items = itemStorage.searchItems(text.trim().toLowerCase());
-
-        return items.stream()
-                .map(itemMapper::toItemDto)
-                .collect(Collectors.toList());
     }
 }

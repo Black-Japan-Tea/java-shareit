@@ -3,7 +3,10 @@ package ru.practicum.shareit.item.controller;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
@@ -46,10 +49,18 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(
+    public ResponseEntity<List<ItemDto>> searchItems(
             @RequestParam String text,
             @RequestHeader(USER_ID_HEADER) Long userId) {
         log.info("Search request for text: '{}' by user {}", text, userId);
-        return itemService.searchItems(text);
+        try {
+            List<ItemDto> result = itemService.searchItems(text);
+            return ResponseEntity.ok(result);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Unexpected search error", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 }

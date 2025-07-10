@@ -56,14 +56,9 @@ public class InMemoryItemStorage implements ItemStorage {
 
     @Override
     public List<Item> searchAvailableItems(String text) {
-        Objects.requireNonNull(text, "Search text cannot be null");
-
         return items.values().stream()
                 .filter(item -> Boolean.TRUE.equals(item.getAvailable()))
-                .filter(item ->
-                        item.getName().toLowerCase().contains(text) ||
-                        item.getDescription().toLowerCase().contains(text)
-                )
+                .filter(item -> containsText(item, text.toLowerCase()))
                 .collect(Collectors.toList());
     }
 }
