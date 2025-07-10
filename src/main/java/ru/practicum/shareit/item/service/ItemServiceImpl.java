@@ -97,22 +97,4 @@ public class ItemServiceImpl implements ItemService {
             throw new SearchException("Item search failed");
         }
     }
-
-    @Override
-    public List<ItemDto> findItemsByRequestId(Long requestId) {
-        if (requestId == null) {
-            return Collections.emptyList();
-        }
-
-        List<Item> items = itemStorage.findByRequestId(requestId);
-        return items.stream()
-                .map(item -> {
-                    ItemDto dto = itemMapper.toItemDto(item);
-                    if (item.getOwner() != null) {
-                        dto.setOwnerId(item.getOwner().getId());
-                    }
-                    return dto;
-                })
-                .collect(Collectors.toList());
-    }
 }

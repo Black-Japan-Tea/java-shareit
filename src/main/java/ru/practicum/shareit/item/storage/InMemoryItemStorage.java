@@ -50,13 +50,6 @@ public class InMemoryItemStorage implements ItemStorage {
     }
 
     @Override
-    public List<Item> findByRequestId(Long requestId) {
-        return items.values().stream()
-                .filter(item -> item.getRequest() != null && item.getRequest().getId().equals(requestId))
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public List<Item> searchAvailableItems(String text) {
         Objects.requireNonNull(text, "Search text cannot be null");
 
