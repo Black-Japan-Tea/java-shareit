@@ -15,7 +15,6 @@ import ru.practicum.shareit.user.service.UserService;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
