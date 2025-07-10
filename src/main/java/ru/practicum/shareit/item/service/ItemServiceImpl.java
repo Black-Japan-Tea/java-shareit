@@ -81,20 +81,14 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public List<ItemDto> searchItems(String text) {
-        try {
-            if (text == null || text.isBlank()) {
-                return Collections.emptyList();
-            }
-
-            String normalizedText = text.trim().toLowerCase();
-            List<Item> foundItems = itemStorage.searchAvailableItems(normalizedText);
-
-            return foundItems.stream()
-                    .map(itemMapper::toItemDto)
-                    .peek(dto -> dto.setAvailable(true))
-                    .collect(Collectors.toList());
-        } catch (Exception e) {
-            throw new SearchException("Item search failed");
+        if (text == null || text.isBlank()) {
+            return Collections.emptyList();
         }
+
+        List<Item> items = itemStorage.searchItems(text.trim().toLowerCase());
+
+        return items.stream()
+                .map(itemMapper::toItemDto)
+                .collect(Collectors.toList());
     }
 }

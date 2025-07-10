@@ -46,16 +46,10 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public List<ItemDto> searchItems(@RequestParam String text,
-                                     @RequestHeader(USER_ID_HEADER) Long userId) {
-        log.info("Searching items with text: '{}', userId: {}", text, userId);
-        try {
-            List<ItemDto> result = itemService.searchItems(text);
-            log.debug("Found {} items", result.size());
-            return result;
-        } catch (Exception e) {
-            log.error("Search error", e);
-            throw e;
-        }
+    public List<ItemDto> searchItems(
+            @RequestParam String text,
+            @RequestHeader(USER_ID_HEADER) Long userId) {
+        log.info("Search request for text: '{}' by user {}", text, userId);
+        return itemService.searchItems(text);
     }
 }

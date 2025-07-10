@@ -43,10 +43,15 @@ public class InMemoryItemStorage implements ItemStorage {
 
     @Override
     public List<Item> searchItems(String text) {
-        String lowerText = text.toLowerCase();
         return items.values().stream()
-                .filter(item -> (item.getName().toLowerCase().contains(lowerText) || item.getDescription().toLowerCase().contains(lowerText)))
+                .filter(item -> Boolean.TRUE.equals(item.getAvailable()))
+                .filter(item -> containsText(item, text))
                 .collect(Collectors.toList());
+    }
+
+    private boolean containsText(Item item, String text) {
+        return item.getName().toLowerCase().contains(text) ||
+               item.getDescription().toLowerCase().contains(text);
     }
 
     @Override
@@ -60,10 +65,5 @@ public class InMemoryItemStorage implements ItemStorage {
                         item.getDescription().toLowerCase().contains(text)
                 )
                 .collect(Collectors.toList());
-    }
-
-    private boolean containsText(Item item, String text) {
-        return item.getName().toLowerCase().contains(text.toLowerCase()) ||
-               item.getDescription().toLowerCase().contains(text.toLowerCase());
     }
 }
