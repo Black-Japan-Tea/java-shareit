@@ -8,7 +8,6 @@ import ru.practicum.shareit.booking.model.Booking;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByBookerIdAndStatus(Long bookerId, BookingStatus status, Sort sort);
@@ -41,6 +40,16 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findCurrentBookingsByBooker(@Param("bookerId") Long bookerId,
                                               @Param("now") LocalDateTime now);
 
+    @Query("SELECT b FROM Booking b " +
+           "JOIN FETCH b.item " +
+           "JOIN FETCH b.booker " +
+           "WHERE b.item.id IN :itemIds " +
+           "AND b.status = 'APPROVED' " +
+           "ORDER BY b.start ASC")
+    List<Booking> findApprovedBookingsForItems(@Param("itemIds") List<Long> itemIds);
+
+    List<Booking> findByItemId(Long itemId);
+
     List<Booking> findByBookerId(Long bookerId, Sort sort);
 
     List<Booking> findByItemOwnerId(Long ownerId, Sort sort);
@@ -52,10 +61,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findByBookerIdAndStartAfter(Long bookerId, LocalDateTime start, Sort sort);
 
     List<Booking> findByItemOwnerIdAndStartAfter(Long ownerId, LocalDateTime start, Sort sort);
-
-    Optional<Booking> findFirstByItemIdAndEndBeforeOrderByEndDesc(Long itemId, LocalDateTime end);
-
-    Optional<Booking> findFirstByItemIdAndStartAfterOrderByStartAsc(Long itemId, LocalDateTime start);
 
     boolean existsByBookerIdAndItemIdAndEndBefore(Long userId, Long itemId, LocalDateTime now);
 }
