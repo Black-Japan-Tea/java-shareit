@@ -130,21 +130,23 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto updateItem(Long userId, Long itemId, ItemDto itemDto) {
-        if (!getItem(itemId).getOwner().getId().equals(userId)) {
+        Item item = getItem(itemId);
+
+        if (!item.getOwner().getId().equals(userId)) {
             throw new ItemAccessDeniedException("Пользователь не является владельцем вещи");
         }
 
         if (itemDto.getName() != null) {
-            getItem(itemId).setName(itemDto.getName());
+            item.setName(itemDto.getName());
         }
         if (itemDto.getDescription() != null) {
-            getItem(itemId).setDescription(itemDto.getDescription());
+            item.setDescription(itemDto.getDescription());
         }
         if (itemDto.getAvailable() != null) {
-            getItem(itemId).setAvailable(itemDto.getAvailable());
+            item.setAvailable(itemDto.getAvailable());
         }
 
-        Item updatedItem = itemRepository.save(getItem(itemId));
+        Item updatedItem = itemRepository.save(item);
         return itemMapper.toItemDto(updatedItem);
     }
 

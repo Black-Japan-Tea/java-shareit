@@ -37,11 +37,15 @@ public class BookingServiceImpl implements BookingService {
             throw new ValidationException("Дата окончания бронирования должна быть после даты начала");
         }
 
-        if (!getItem(bookingRequestDto).getAvailable()) {
+        Item item = getItem(bookingRequestDto);
+
+        if (!item.getAvailable()) {
             throw new ItemNotAvailableException("Вещь не доступна для бронирования");
         }
 
-        if (getItem(bookingRequestDto).getOwner().getId().equals(userId)) {
+        User booker = getBooker(userId);
+
+        if (item.getOwner().getId().equals(userId)) {
             throw new ItemAccessDeniedException("Вы не можете забронировать собственную вещь");
         }
 
@@ -55,8 +59,8 @@ public class BookingServiceImpl implements BookingService {
         }
 
         Booking booking = bookingMapper.toBooking(bookingRequestDto);
-        booking.setBooker(getBooker(userId));
-        booking.setItem(getItem(bookingRequestDto));
+        booking.setBooker(booker);
+        booking.setItem(item);
         booking.setStatus(BookingStatus.WAITING);
 
         Booking savedBooking = bookingRepository.save(booking);
@@ -65,16 +69,18 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingResponseDto approveBooking(Long userId, Long bookingId, Boolean approved) {
-        if (!getBooking(bookingId).getItem().getOwner().getId().equals(userId)) {
+        Booking booking = getBooking(bookingId);
+
+        if (!booking.getItem().getOwner().getId().equals(userId)) {
             throw new ItemAccessDeniedException("Только владелец вещи может подтвердить бронирование");
         }
 
-        if (getBooking(bookingId).getStatus() != BookingStatus.WAITING) {
+        if (booking.getStatus() != BookingStatus.WAITING) {
             throw new ValidationException("Бронирование уже обработано");
         }
 
-        getBooking(bookingId).setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
-        Booking updatedBooking = bookingRepository.save(getBooking(bookingId));
+        booking.setStatus(approved ? BookingStatus.APPROVED : BookingStatus.REJECTED);
+        Booking updatedBooking = bookingRepository.save(booking);
         return bookingMapper.toBookingResponseDto(updatedBooking);
     }
 
