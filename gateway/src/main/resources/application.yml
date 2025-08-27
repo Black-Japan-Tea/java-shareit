@@ -1,0 +1,20 @@
+spring:
+  application:
+    name: shareit-gateway
+
+server:
+  port: 8080
+
+shareit-server:
+  url: http://localhost:9090
+
+logbook:
+  format:
+    style: http
+  filter:
+    enabled: true
+
+logging:
+  level:
+    root: INFO
+    org.zalando.logbook: INFO
