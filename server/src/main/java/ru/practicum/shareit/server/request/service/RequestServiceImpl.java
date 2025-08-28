@@ -60,18 +60,13 @@ public class RequestServiceImpl implements RequestService {
 
     @Override
     public RequestWithItemsResponseDto getRequestById(Long requestId) {
+        Request request = requestRepository.getRequestById(requestId)
+                .orElseThrow(() -> new NotFoundException("Request with id=" + requestId + " not found"));
 
-        Optional<Request> maybeRequest = requestRepository.getRequestById(requestId);
-
-        if (maybeRequest.isEmpty()) {
-            throw new NotFoundException("Request with id=" + requestId + " not found");
-        }
-
-        return RequestMapper.toRequestWithItemsResponseDto(maybeRequest.get(),
+        return RequestMapper.toRequestWithItemsResponseDto(request,
                 itemRepository.findAllByRequestIn(Set.of(requestId)).stream()
                         .map(ItemMapper::toItemInRequestResponseDto)
                         .collect(Collectors.toSet()));
-
     }
 
     private void checkUser(Long userId) {
@@ -92,7 +87,7 @@ public class RequestServiceImpl implements RequestService {
         Map<Long, List<Item>> requestsItems = items.stream()
                 .collect(Collectors.groupingBy(Item::getRequest));
 
-        Collection<RequestWithItemsResponseDto> result = requests.stream()
+        return requests.stream()
                 .map(request -> {
 
                     Collection<Item> requestItems = requestsItems.get(request.getId());
@@ -110,6 +105,5 @@ public class RequestServiceImpl implements RequestService {
 
                 })
                 .collect(Collectors.toSet());
-        return result;
     }
 }

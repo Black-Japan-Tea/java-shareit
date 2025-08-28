@@ -64,23 +64,15 @@ public class UserServiceImpl implements UserService {
     }
 
     private User checkAndGetUserById(Long id) {
-
-        Optional<User> mayBeUser = repository.getUserById(id);
-
-        if (mayBeUser.isPresent()) {
-            return mayBeUser.get();
-        } else {
-            throw new NotFoundException("User with id=" + id + " not found");
-        }
+        return repository.getUserById(id)
+                .orElseThrow(() -> new NotFoundException("User with id=" + id + " not found"));
     }
 
     private void checkEmailForExisting(Long userId, String email) {
-        Optional<User> userToCheck = repository.getUserByEmail(email);
+        Optional<User> existingUser = repository.getUserByEmail(email);
 
-        if (userToCheck.isPresent()) {
-            if (!userToCheck.get().getId().equals(userId)) {
-                throw new ConflictException("UserServiceImpl: " + email + " is already exist");
-            }
+        if (existingUser.isPresent() && !existingUser.get().getId().equals(userId)) {
+            throw new ConflictException("UserServiceImpl: " + email + " is already exist");
         }
     }
 }

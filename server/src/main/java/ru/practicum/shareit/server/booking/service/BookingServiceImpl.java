@@ -20,7 +20,6 @@ import ru.practicum.shareit.server.user.model.User;
 import ru.practicum.shareit.server.user.repository.UserRepository;
 
 import java.util.Collection;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,9 +34,9 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingResponseDto createBooking(BookingCreateDto dto, Long bookerId) {
 
-        User booker = checkAndgetUser(bookerId);
+        User booker = checkAndGetUser(bookerId);
 
-        Item item = checkAndgetItem(dto.getItemId());
+        Item item = checkAndGetItem(dto.getItemId());
 
         if (!item.getAvailable()) {
             throw new ValidationException("Item with id=" + item.getId() + " not available");
@@ -56,7 +55,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingResponseDto updateBooking(Long bookingId, Long bookerId, Boolean approved) {
 
-        User booker = checkAndgetUser(bookerId);
+        User booker = checkAndGetUser(bookerId);
         Booking booking = checkAndGetBooking(bookingId);
 
         if (!booking.getItem().getOwner().equals(booker.getId())) {
@@ -84,7 +83,7 @@ public class BookingServiceImpl implements BookingService {
     public BookingResponseDto getBookingById(Long bookingId, Long userId) {
 
 
-        User user = checkAndgetUser(userId);
+        User user = checkAndGetUser(userId);
         Booking booking = checkAndGetBooking(bookingId);
 
         if (!(user.getId().equals(booking.getBooker().getId()) ||
@@ -101,7 +100,7 @@ public class BookingServiceImpl implements BookingService {
     public Collection<BookingResponseDto> getAllBookingAtState(Long userId, String state) {
 
         BookingStatusDto stateDTO = getBookingStatusDto(state);
-        User booker = checkAndgetUser(userId);
+        User booker = checkAndGetUser(userId);
 
         Collection<Booking> bookings = switch (stateDTO) {
             case ALL -> bookingRepository.findBookingsByBookerOrderByStartDesc(booker);
@@ -124,7 +123,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public Collection<BookingResponseDto> getAllOwnerBookingAtState(Long userId, String state) {
         BookingStatusDto stateDTO = getBookingStatusDto(state);
-        User booker = checkAndgetUser(userId);
+        User booker = checkAndGetUser(userId);
 
         Collection<Booking> bookings = switch (stateDTO) {
             case ALL -> bookingRepository.findAllBookingsByOwner(booker.getId());
@@ -143,39 +142,19 @@ public class BookingServiceImpl implements BookingService {
     }
 
 
-    private User checkAndgetUser(Long userId) {
-        User booker;
-
-        Optional<User> maybeUser = userRepository.getUserById(userId);
-        if (maybeUser.isEmpty()) {
-            throw new ForbiddenException("User with id=" + userId + " not found");
-        } else {
-            booker = maybeUser.get();
-        }
-        return booker;
+    private User checkAndGetUser(Long userId) {
+        return userRepository.getUserById(userId)
+                .orElseThrow(() -> new ForbiddenException("User with id=" + userId + " not found"));
     }
 
-    private Item checkAndgetItem(Long itemId) {
-        Item item;
-
-        Optional<Item> maybeItem = itemRepository.getItemById(itemId);
-        if (maybeItem.isEmpty()) {
-            throw new NotFoundException("Item with id=" + itemId + " not found");
-        }
-        item = maybeItem.get();
-
-        return item;
+    private Item checkAndGetItem(Long itemId) {
+        return itemRepository.getItemById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item with id=" + itemId + " not found"));
     }
 
     private Booking checkAndGetBooking(Long id) {
-
-        Optional<Booking> maybeBooking = bookingRepository.findById(id);
-
-        if (maybeBooking.isEmpty()) {
-            throw new NotFoundException("Booking with id=" + id + " not found");
-        }
-
-        return maybeBooking.get();
+        return bookingRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Booking with id=" + id + " not found"));
     }
 
     private BookingStatusDto getBookingStatusDto(String state) {

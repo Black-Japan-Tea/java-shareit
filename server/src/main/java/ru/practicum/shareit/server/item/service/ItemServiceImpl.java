@@ -250,14 +250,8 @@ public class ItemServiceImpl implements ItemService {
         return ItemMapper.toCommentResponseDto(comment, user.getName());
     }
 
-
     private Item checkAndGetItemById(Long itemId) {
-
-        Optional<Item> maybeItem = repository.getItemById(itemId);
-
-        if (maybeItem.isEmpty()) {
-            throw new NotFoundException("Item with id=" + itemId + " not found");
-        }
-        return maybeItem.get();
+        return repository.getItemById(itemId)
+                .orElseThrow(() -> new NotFoundException("Item with id=" + itemId + " not found"));
     }
 }
